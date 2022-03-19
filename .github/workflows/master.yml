@@ -14,6 +14,8 @@ jobs:
             name: windows
             build-script: "build-dist.ps1"
     steps:
+      - name: Setup target name
+        run: echo "target_name=dist-${{ matrix.name }}" >> $GITHUB_ENV
       - name: Checkout repository
         uses: actions/checkout@v2
       - name: Install Python
@@ -22,20 +24,20 @@ jobs:
         run: |
           pip install -r requirements.txt
       - name: Build
-        run: "./${{ matrix.build-script }} dist-${{ matrix.name }}"
+        run: "./${{ matrix.build-script }} ${{ env.target_name }}"
       - name: Zip release
         uses: thedoctor0/zip-release@master
         with:
           type: 'zip'
-          filename: dist-${{ matrix.name }}.zip
-          path: dist-${{ matrix.name }}/
+          filename: ${{ env.target_name }}.zip
+          path: ${{ env.target_name }}/
       - uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.os }}
-          path: dist-${{ matrix.name }}.zip
+          path: ${{ env.target_name }}.zip
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           generate_release_notes: True
-          files: dist-${{ matrix.name }}.zip
+          files: ${{ env.target_name }}.zip
