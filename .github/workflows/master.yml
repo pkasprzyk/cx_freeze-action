@@ -8,8 +8,10 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
+            name: linux
             build-script: "build-dist.sh"
           - os: windows-latest
+            name: windows
             build-script: "build-dist.ps1"
     steps:
       - name: Checkout repository
@@ -21,8 +23,14 @@ jobs:
           pip install -r requirements.txt
       - name: Build
         run: |
-          ./${{ matrix.build-script }}
+          ./${{ matrix.build-script }} dist-${{ matrix.name }}
       - uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.os }}
           path: dist/
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          generate_release_notes: True
+          files: dist-${{ matrix.name }}
